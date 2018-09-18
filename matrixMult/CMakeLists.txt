@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 2.8.4)
+project(matrixMult)
+set(CMAKE_C_FLAGS "-std=c99")
+set(SOURCE_FILES matrixMult.c)
+add_executable(matrixMult ${SOURCE_FILES})
+find_package(Threads)
+target_link_libraries(matrixMult ${CMAKE_THREAD_LIBS_INIT})
