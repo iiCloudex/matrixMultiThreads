@@ -51,12 +51,40 @@ void allocateAndLoadMatrices(int ***a, int ***b, int ***c, int *m, int *k, int *
    if (scanf("%d %d %d", m, k, n) == 0)
       oops("Cannot read matrix sizes.\n", -2);
 
+   a = (int **) malloc(sizeof(int *) * (*m));
+   b = (int **) malloc(sizeof(int *) * (*k));
+   c = (int **) malloc(sizeof(int *) * (*m));
+
+   for(int i = 0; i < m; i++)
+   {
+      a[i] = (int *) malloc(sizeof(int) * (*k));
+   }
+   for(int i = 0; i < k; i++)
+   {
+      b[i] = (int *) malloc(sizeof(int) * (*n));
+   } 
+   for(int i = 0; i < m; i++)
+   {
+      c[i] = (int *) malloc(sizeof(int) * (*n));
+   }
+
+   loadMatrix(a, *m, *k);
+   loadMatrix(b, *k, *n);
+
    // TODO: implement the magic
 }
 
 void loadMatrix(int ***matrix, int m, int n)
 {
    // TODO: implement the magic
+   for(int i = 0; i < m; i++)
+   {
+      for(int j = 0; j < n; j++)
+      {
+         scanf("%d", matrix[i][j]);
+      }
+   }
+
 }
 
 pthread_t **multiply(int **a, int **b, int **c, int m, int k, int n)
@@ -90,4 +118,13 @@ void join(pthread_t **tids, int m, int n)
 void displayMatrix(int **matrix, int m, int n)
 {
    // TODO: implement the magic
+
+   for(int i = 0; i < m; i++)
+   {
+      for(int j = 0; j < n; j++)
+      {
+         printf("%d ", &(matrix[i][j]));
+      }
+      printf("\n");
+   }
 }
