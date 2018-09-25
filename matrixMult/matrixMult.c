@@ -50,7 +50,7 @@ void *matrixThread(void *param)
     for (int k = 0; k < cell.k; k++)
         cell.c[cell.i][cell.j] += ((cell.a[cell.i][k]) * (cell.b[k][cell.j]));
 
-    
+    free(param);
     pthread_exit(0);
 
     return NULL;
