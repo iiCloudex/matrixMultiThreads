@@ -5,49 +5,61 @@
 */
 
 #include "matrixMult.h"
-#define MAX_PAIRS 5
 
 int main(int argc, char *argv[])
 {
-    if (freopen(argv[1], "r", stdin) == 0)
-      oops("Cannot open the input file.\n", -1);
-
-    int **a1, **b1, **c1, **a2, **b2, **c2; // matrices
-    int m1, k1, n1, m2, k2, n2; // dimensions of the matices m x k and k x m/
-
-    allocateAndLoadMatrices(&a1, &b1, &c1, &m1, &k1, &n1);
-    loadMatrix(&a1, m1, k1);
-    loadMatrix(&b1, k1, n1);
-
-    allocateAndLoadMatrices(&a2, &b2, &c2, &m2, &k2, &n2);
-    loadMatrix(&a2, m2, k2);
-    loadMatrix(&b2, k2, n2);
-
-    pthread_t **tid1s = multiply(a1, b1, c1, m1, k1, n1);
-    pthread_t **tid2s = multiply(a2, b2, c2, m2, k2, n2);
-
-    join(tid1s, m1, n1);
-    join(tid2s, m2, n2);
-    
-    free_tids(tid1s, m1);
-    free_tids(tid2s, m2);
 
 
-    //Dispaly results of matrix multiplication
+    if ( (freopen(argv[1], "r", stdin)) == 0)
+        oops("Cannot open the input file.\n", -1);
 
-    printf("\nMATRIX A1\n");
-    displayMatrix(a1, m1, k1);
-    printf("\nMATRIX B1\n");
-    displayMatrix(b1, k1, n1);
-    printf("\nMATRIX A1 x B1\n");
-    displayMatrix(c1, m1, n1);
+    struct matrixCell matrixPairs[MAX_PAIRS];
 
-    printf("\nMATRIX A2\n");
-    displayMatrix(a2, m2, k2);
-    printf("\nMATRIX B2\n");
-    displayMatrix(b2, k2, n2);
-    printf("\nMATRIX A2 x B2\n");
-    displayMatrix(c2, m2, n2);
+    int c;
+    int index = 0;
+    pthread_t **tids[MAX_PAIRS];
+
+    while( ((c = getc(stdin)) != EOF) && index < MAX_PAIRS)
+    {
+        if(isdigit(c))
+        {
+            ungetc(c, stdin);
+
+            //Pass the struct through instead
+            allocateAndLoadMatrices(&(matrixPairs[index].a), &(matrixPairs[index].b), &(matrixPairs[index].c), &(matrixPairs[index].i), &(matrixPairs[index].k), &(matrixPairs[index].j));
+            index++;
+        }
+
+    }
+
+    //Do each step for the whole array before moving onto the next step
+
+    for(int i = 0; i < index; i++)
+        tids[i] = multiply(matrixPairs[i].a, matrixPairs[i].b, matrixPairs[i].c,
+                                   matrixPairs[i].i, matrixPairs[i].k, matrixPairs[i].j);
+
+    for(int i = 0; i < index; i++)
+        join(tids[i], matrixPairs[i].i, matrixPairs[i].j);
+
+    for(int i = 0; i < index; i++)
+        free_tids(tids[i], matrixPairs[i].i);
+
+    for(int i = 0; i < index; i++)
+    {
+        printf("\nMATRIX A%d\n", i+1);
+        displayMatrix(matrixPairs[i].a, matrixPairs[i].i, matrixPairs[i].k);
+        printf("\nMATRIX B%d\n", i+1);
+        displayMatrix(matrixPairs[i].b, matrixPairs[i].k, matrixPairs[i].j);
+        printf("\nMATRIX A%d x B%d\n", i+1, i+1);
+        displayMatrix(matrixPairs[i].c, matrixPairs[i].i, matrixPairs[i].j);
+    }
+
+    for(int i = 0; i < index; i++)
+    {
+       freeMatrixCells(matrixPairs[i].a, matrixPairs[i].i);
+       freeMatrixCells(matrixPairs[i].b, matrixPairs[i].k);
+       freeMatrixCells(matrixPairs[i].c, matrixPairs[i].i);
+    }
 
     return 0;
 }
@@ -73,7 +85,7 @@ void *matrixThread(void *param)
 void allocateAndLoadMatrices(int ***matrixA, int ***matrixB, int ***matrixC, int *m, int *k, int *n)
 {
     if (scanf("%d %d %d", m, k, n) == 0)
-      oops("Cannot read matrix sizes.\n", -2);
+        oops("Cannot read matrix sizes.\n", -2);
 
     *matrixA = (int **) malloc(sizeof(int *) * (*m));
     *matrixB = (int **) malloc(sizeof(int *) * (*k));
@@ -87,6 +99,9 @@ void allocateAndLoadMatrices(int ***matrixA, int ***matrixB, int ***matrixC, int
 
     for (int rows = 0; rows < (*m); rows++)
         (*matrixC)[rows] = (int *) malloc(sizeof(int) * (*n));
+
+    loadMatrix(matrixA, *m, *k);
+    loadMatrix(matrixB, *k, *n);
 
 }
 
@@ -116,7 +131,7 @@ pthread_t **multiply(int **matrixA, int **matrixB, int **matrixC, int m, int k, 
             cell->k = k;
             cell->i = rows;
             if (pthread_create(&tids[rows][columns], NULL, matrixThread, (void *) cell) != 0)
-                oops("Failed to create thread\n", 1);
+            oops("Failed to create thread\n", 1);
         }
     }
 
@@ -164,4 +179,12 @@ void displayMatrix(int **matrix, int m, int n)
         }
         printf("\n");
     }
+}
+
+void freeMatrixCells(int **a, int m)
+{
+   for (int rows = 0; rows < m; rows++)
+       free(a[rows]);
+
+   free(a);
 }

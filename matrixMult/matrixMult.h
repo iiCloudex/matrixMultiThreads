@@ -1,6 +1,6 @@
 /*
 * Name: Marco Antonio Bustamante
-* Lab/Task: Lab 1 / Task 1
+* Lab/Task: Lab 4 Task 1
 * Date: 9/20/18
 */
 
@@ -10,8 +10,11 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <ctype.h>
 
 #define oops(errmsg, err) { perror(errmsg); exit(err); }
+#define MAX_PAIRS 5
 
 // struct for passing indices to the threads
 struct matrixCell
@@ -32,5 +35,6 @@ void free_tids(pthread_t **, int);
 pthread_t **multiply(int **, int **, int **, int, int, int);
 void join(pthread_t **, int, int);
 void displayMatrix(int **, int, int);
+void freeMatrixCells(int **a, int m);
 
 #endif
