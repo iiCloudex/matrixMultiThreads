@@ -1,15 +1,27 @@
+/*
+* Name: Marco Antonio Bustamante
+* Lab/Task: Lab 4 Task 1
+* Date: 9/20/18
+*/
+
 #include "matrixMult.h"
+#define MAX_PAIRS 5
 
 int main(int argc, char *argv[])
 {
     if (freopen(argv[1], "r", stdin) == 0)
-    oops("Cannot open the input file.\n", -1);
+      oops("Cannot open the input file.\n", -1);
 
     int **a1, **b1, **c1, **a2, **b2, **c2; // matrices
     int m1, k1, n1, m2, k2, n2; // dimensions of the matices m x k and k x m/
 
     allocateAndLoadMatrices(&a1, &b1, &c1, &m1, &k1, &n1);
+    loadMatrix(&a1, m1, k1);
+    loadMatrix(&b1, k1, n1);
+
     allocateAndLoadMatrices(&a2, &b2, &c2, &m2, &k2, &n2);
+    loadMatrix(&a2, m2, k2);
+    loadMatrix(&b2, k2, n2);
 
     pthread_t **tid1s = multiply(a1, b1, c1, m1, k1, n1);
     pthread_t **tid2s = multiply(a2, b2, c2, m2, k2, n2);
@@ -56,9 +68,9 @@ void *matrixThread(void *param)
     return NULL;
 }
 
-void allocateAndLoadMatrices(int ***matrixA, int ***matrixB, int ***matrixC, int *m, int *k, int *n)
 // takes pointers to two-dimensional matrices, so they can be allocated in here
 // and used by the caller
+void allocateAndLoadMatrices(int ***matrixA, int ***matrixB, int ***matrixC, int *m, int *k, int *n)
 {
     if (scanf("%d %d %d", m, k, n) == 0)
       oops("Cannot read matrix sizes.\n", -2);
@@ -76,9 +88,6 @@ void allocateAndLoadMatrices(int ***matrixA, int ***matrixB, int ***matrixC, int
     for (int rows = 0; rows < (*m); rows++)
         (*matrixC)[rows] = (int *) malloc(sizeof(int) * (*n));
 
-
-    loadMatrix(matrixA, *m, *k);
-    loadMatrix(matrixB, *k, *n);
 }
 
 void loadMatrix(int ***matrix, int m, int n)
@@ -98,6 +107,7 @@ pthread_t **multiply(int **matrixA, int **matrixB, int **matrixC, int m, int k, 
     {
         for (int columns = 0; columns < n; columns++)
         {
+            //Must be in here because each thread gets its own
             struct matrixCell *cell = malloc(sizeof(struct matrixCell));
             cell->j = columns;
             cell->a = matrixA;
