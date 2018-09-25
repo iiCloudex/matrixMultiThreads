@@ -6,13 +6,20 @@ int main(int argc, char *argv[])
     oops("Cannot open the input file.\n", -1);
 
     int **a1, **b1, **c1, **a2, **b2, **c2; // matrices
-    int m1, k1, n1, m2, k2, n2; // dimensions of the matices m x k and k x m
+    int m1, k1, n1, m2, k2, n2; // dimensions of the matices m x k and k x m/
 
     allocateAndLoadMatrices(&a1, &b1, &c1, &m1, &k1, &n1);
     allocateAndLoadMatrices(&a2, &b2, &c2, &m2, &k2, &n2);
 
-    multiply(a1, b1, c1, m1, k1, n1);
-    multiply(a2, b2, c2, m2, k2, n2);
+    pthread_t **tid1s = multiply(a1, b1, c1, m1, k1, n1);
+    pthread_t **tid2s = multiply(a2, b2, c2, m2, k2, n2);
+
+    join(tid1s, m1, n1);
+    join(tid2s, m2, n2);
+    
+    free_tids(tid1s, m1);
+    free_tids(tid2s, m2);
+
 
     //Dispaly results of matrix multiplication
 
@@ -43,6 +50,9 @@ void *matrixThread(void *param)
     for (int k = 0; k < cell.k; k++)
         cell.c[cell.i][cell.j] += ((cell.a[cell.i][k]) * (cell.b[k][cell.j]));
 
+    
+    pthread_exit(0);
+
     return NULL;
 }
 
@@ -51,7 +61,7 @@ void allocateAndLoadMatrices(int ***matrixA, int ***matrixB, int ***matrixC, int
 // and used by the caller
 {
     if (scanf("%d %d %d", m, k, n) == 0)
-    oops("Cannot read matrix sizes.\n", -2);
+      oops("Cannot read matrix sizes.\n", -2);
 
     *matrixA = (int **) malloc(sizeof(int *) * (*m));
     *matrixB = (int **) malloc(sizeof(int *) * (*k));
@@ -83,31 +93,22 @@ void loadMatrix(int ***matrix, int m, int n)
 pthread_t **multiply(int **matrixA, int **matrixB, int **matrixC, int m, int k, int n)
 {
     pthread_t **tids = alloc_tids(m, n);
-    struct matrixCell *cell;
-    cell = malloc(sizeof(struct matrixCell));
-    cell->a = matrixA;
-    cell->b = matrixB;
-    cell->c = matrixC;
-    cell->k = k;
-    cell->c = matrixC;
-
 
     for (int rows = 0; rows < m; rows++)
     {
         for (int columns = 0; columns < n; columns++)
         {
-            cell->i = rows;
+            struct matrixCell *cell = malloc(sizeof(struct matrixCell));
             cell->j = columns;
+            cell->a = matrixA;
+            cell->b = matrixB;
+            cell->c = matrixC;
+            cell->k = k;
+            cell->i = rows;
             if (pthread_create(&tids[rows][columns], NULL, matrixThread, (void *) cell) != 0)
                 oops("Failed to create thread\n", 1);
-            join(tids, m, n);
         }
     }
-
-
-
-    free_tids(tids, m);
-
 
     return tids;
 }
@@ -135,6 +136,7 @@ void free_tids(pthread_t **tids, int m)
 void join(pthread_t **tids, int m, int n)
 {
     //Join each thread in the 2D array
+
     for (int rows = 0; rows < m; rows++)
     {
         for (int columns = 0; columns < n; columns++)

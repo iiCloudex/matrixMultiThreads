@@ -1,3 +1,9 @@
+/*
+* Name: Marco Antonio Bustamante
+* Lab/Task: Lab 1 / Task 1
+* Date: 9/20/18
+*/
+
 #ifndef __MATRIX_MULT_H_
 #define __MATRIX_MULT_H_
 
